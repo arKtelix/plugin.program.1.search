@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="plugin.program.1.search" name="1 Search" version="1.0.0" provider-name="arctelix">
+    <requires>
+		<import addon="xbmc.python" version="2.14.0"/>
+        <import addon="plugin.video.plexbmc" version="3.4.5" optional="true"/>
+	</requires>
+	<extension point="xbmc.python.script" library="1search.py">
+		<provides>executable</provides>
+	</extension>
+	<extension point="xbmc.addon.metadata">
+		<platform>all</platform>
+		<summary lang="en">Popup Hello World</summary>
+		<description lang="en">Example Plugin to show hello world</description>
+		<license>GNU General Public License, v2</license>
+		<language></language>
+		<forum>http://forum.kodi.tv/showthread.php?tid=209948</forum>
+		<source>https://github.com/zag2me/plugin.program.hello.world</source>
+		<email>zag@kodi.org</email>
+	</extension>
+</addon>
