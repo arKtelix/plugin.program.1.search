@@ -18,29 +18,21 @@ ACTION_OSD = ( 122, )
 ACTION_SHOW_GUI = ( 18, )
 ACTION_SHOW_INFO = ( 11, )
 
-# 100 Results window
-# - 101 Section container grouplist
+""" ROADMAP:
 
-# 110 movies
-# 120 tvshows
-# 130 seasons
-# 140 episodes
-# 150 music videos
-# 160 artists
-# 170 albums
-# 180 songs
-# 210 actors
-# --0 Results section count
-# --1 Results section list
+- Impliment IMDB or other indexers for initial search, user select, result, then search sources.
+"""
 
-# 1x9 ?
-
-# 190 Search.. label / new button
-# -191 Search category label
-# -198 New Search
-
-
-
+# Results window
+CTRL_RESULTS = 100
+# Search.. label / new button
+LABEL_SEARCH_STATUS = 190
+# Search category label
+LABEL_SEARCH_CATEGORY = 191
+# New Search
+BTN_NEW_SEARCH = 198
+# Section container grouplist
+GL_SECTION = 101
 
 def log(txt):
     if isinstance (txt,str):
@@ -66,7 +58,36 @@ class GUI( xbmcgui.WindowXMLDialog ):
         self.tvshowid = None
         self.artistid = None
 
-
+    def get_view_id(section, target=None):
+        """ TODO: Not implimented yet
+        """
+        if target == 'container':
+            target = 9
+        elif target == 'count':
+            target = 0
+        elif target == 'list':
+            target = 1
+            
+        if section == 'movies':
+            section = 110
+        elif section == 'shows':
+            section = 120
+        elif section == 'seasons':
+            section = 130
+        elif section == 'episodes':
+            section = 140
+        elif section == 'music_video':
+            section = 150
+        elif section == 'artists':
+            section = 160
+        elif section == 'albums':
+            section = 170
+        elif section == 'songs':
+            section = 180
+        elif section == 'actors':
+            section = 210
+            
+        return section + target
 
     def onInit( self ):
         print '1 SEARCH GUI -> onInit'

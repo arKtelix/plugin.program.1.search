@@ -71,7 +71,7 @@ print '1 SEARCH -> STARTED'
 
 
 if ( __name__ == "__main__" ):
-    searchstring = 'saul'
+    searchstring = ''
     try:
         params = dict( arg.split( "=" ) for arg in sys.argv[ 1 ].split( "&" ) )
         searchstring = params.get("searchstring")

@@ -360,12 +360,13 @@ class Plugin(object):
     def search(self, search_str, media_type, pid=None):
         """ Initiates search process for each plugin.
         """
-        print '1 SEARCH -----> %s for %s' % (self.id, 'make_%s_batch' % media_type)
-        print '1 SEARCH -----> search got pid: %s' % pid
+        
+        print '1 SEARCH -----> %s earch got pid: %s' % (self.id, pid)
         # check if the plugin supports the media_type
         make_batch = getattr(self, 'make_%s_batch' % media_type, None)
         # provide a search object
         if make_batch:
+            print '1 SEARCH -----> %s HAS %s' % (self.id, 'make_%s_batch' % media_type)
             search = {
                 'media_type': media_type,
                 'media_label': media_type.capitalize(),
@@ -376,6 +377,9 @@ class Plugin(object):
             }
             batch = make_batch(search_str, search)
             return self.search_batch(batch)
+        else:
+            print '1 SEARCH -----> %s DOES NOT HAVE %s' % (self.id, 'make_%s_batch' % media_type)
+        
         return []
 
     def remove_properties(self, search, remove_list):
@@ -399,7 +403,10 @@ class Plugin(object):
 
 
 class Youtube(Plugin):
+    """ Does not work with movies, tv etc due to lack of fields.  Need to index from IMDB etc.. first
+    """
     id = 'plugin.video.youtube'
+    
 
     '''
     def search(self, search_str, media_types=None):
@@ -411,7 +418,8 @@ class Youtube(Plugin):
 
         return results
     '''
-
+        
+    #TODO: need to make a videos option for (not movie, tv, video)
     def make_videos_batch(self, search_str, search):
         batch = list()
         search['path'] = '/kodion/search/query/?q=%s' % search_str
