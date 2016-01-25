@@ -1,7 +1,9 @@
 import sys, re
 import xbmc, xbmcgui
+import contextmenu
 
 __language__   = sys.modules[ "__main__" ].__language__
+__cwd__          = sys.modules[ "__main__" ].__cwd__
 
 CANCEL_DIALOG  = ( 9, 10, 92, 216, 247, 257, 275, 61467, 61448, )
 ACTION_SHOW_INFO = ( 11, )
@@ -11,6 +13,7 @@ class GUI( xbmcgui.WindowXMLDialog ):
         xbmcgui.WindowXMLDialog.__init__( self )
         self.listitem = kwargs[ "listitem" ]
         self.content = kwargs[ "content" ]
+        self.selected_source = None
 
     def onInit( self ):
         self._hide_controls()
@@ -119,6 +122,15 @@ class GUI( xbmcgui.WindowXMLDialog ):
                 self._close_dialog( 'browse_album' )
             if self.content == 'actors':
                 self._close_dialog( 'play_trailer_actors' )
+        elif controlId == 194:
+            sources = self.listitem.getProperty('source_names').split(',')
+            print '-> sources: %s' % sources
+            context_menu = contextmenu.GUI( "script-globalsearch-contextmenu.xml" , __cwd__, "Default", labels=sources )
+            context_menu.doModal()
+            if context_menu.selection is not None:
+                self.selected_source = context_menu.selection
+                self.onClick( 192 )
+            del context_menu
 
     def onFocus( self, controlId ):
         pass

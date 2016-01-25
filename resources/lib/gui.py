@@ -49,11 +49,11 @@ class GUI( xbmcgui.WindowXMLDialog ):
 
         self.searchstring = kwargs[ "searchstring" ].replace('(', '[(]').replace(')', '[)]').replace('+', '[+]')
         log('script version %s started' % __addonversion__)
-        self.nextsearch = False
+
         self.source_order = ['xbmc.library', 'plugin.video.plexbmc']
         self.one = None
         self.results = dict()       # current search results todo: impliment store results here and add index to listitem for retrieval
-        self.xbmc_one = True        # toggle xbmc search from one or gui
+        self.use_one_for_xbmc = True        # toggle xbmc search from one or gui
         self.selected_source = None # currently selected source
         self.tvshowid = None
         self.artistid = None
@@ -93,24 +93,31 @@ class GUI( xbmcgui.WindowXMLDialog ):
         print '1 SEARCH GUI -> onInit'
         if self.searchstring == '':
             self._close()
-        else:
-            self.window_id = xbmcgui.getCurrentWindowDialogId()
-            xbmcgui.Window(self.window_id).setProperty('GlobalSearch.SearchString', self.searchstring)
-            self.ACTORSUPPORT = True
-            self._hide_controls()
-            if not self.nextsearch:
-                self._parse_argv()
-                if self.params == {}:
-                    self._load_settings()
-            # since this is used after init we need to test for existence of self.one
-            if not self.one:
-                print '1 SEARCH GUI -> GUI init one'
-                self.getControl( 190 ).setLabel( '[B]Discovering Plugins[/B]' )
-                self.one = One(use_xbmc=self.xbmc_one)
-                print '1 SEARCH GUI -> GUI end init one'
-            self._reset_variables()
-            self._init_variables()
-            self._fetch_items()
+            return
+
+        self.window_id = xbmcgui.getCurrentWindowDialogId()
+        xbmcgui.Window(self.window_id).setProperty('GlobalSearch.SearchString', self.searchstring)
+        self.ACTORSUPPORT = True
+        self._hide_controls()
+        
+        # Configure options for this search
+        self._load_settings() # Get options from settings
+        #self._parse_argv() 
+            
+                
+        # since this is used after init we need to test for existence of self.one
+        if not self.one:
+            print '1 SEARCH GUI -> GUI init one'
+            self.getControl( 190 ).setLabel( '[B]Discovering Plugins[/B]' )
+            self.one = One(use_xbmc=self.use_one_for_xbmc)
+            print '1 SEARCH GUI -> GUI end init one'
+        self._reset_variables()
+        self._init_variables()
+        self._fetch_items()
+        
+    def getSearchType(self):
+    
+        pass
 
     def _fetch_items( self ):
         print '1 SEARCH GUI ->  _fetch_items'
@@ -135,6 +142,8 @@ class GUI( xbmcgui.WindowXMLDialog ):
         self._check_focus()
 
     def xbmc_send_json(self, json_query, media_type=None):
+        """ Query xbmc directly (not needed after one's implimentation is fully tested)
+        """
         json_resp = xbmc.executeJSONRPC(simplejson.dumps(json_query))
         json_resp = unicode(json_resp, 'utf-8', errors='ignore')
         print '1 SEARCH GUI -> xbmc %s response = %s' % (media_type, ascii(json_resp))
@@ -164,7 +173,7 @@ class GUI( xbmcgui.WindowXMLDialog ):
         results = list()
 
         # start xbmc toggle
-        if not self.xbmc_one:
+        if not self.use_one_for_xbmc:
             xbmc_response = self.xbmc_send_json(xbmc_query, media_type)
             results.append(xbmc_response.get('result', {}))
         # end xbmc toggle
@@ -272,6 +281,7 @@ class GUI( xbmcgui.WindowXMLDialog ):
     def _parse_argv( self ):
         try:
             self.params = dict( arg.split( "=" ) for arg in sys.argv[ 1 ].split( "&" ) )
+            print "1 SEARCH GUI -> Got params %s" % self.params
         except:
             self.params = {}
         self.movies = self.params.get( "movies", "" )
@@ -305,7 +315,7 @@ class GUI( xbmcgui.WindowXMLDialog ):
         self.fetch_albumssongs = 'false'
         self.fetch_songalbum = 'false'
         self.playingtrailer = 'false'
-        self.getControl( 198 ).setLabel( '[B]198:' + __language__(32299) + '[/B]' )
+        self.getControl( 198 ).setLabel( '[B]' + __language__(32299) + '[/B]' ) #new search button
         self.Player = MyPlayer()
         self.Player.gui = self
 
@@ -1237,6 +1247,8 @@ class GUI( xbmcgui.WindowXMLDialog ):
         info_dialog = infodialog.GUI( "script-globalsearch-infodialog.xml" , __cwd__, "Default", listitem=listitem, content=content )
         info_dialog.doModal()
         if info_dialog.action is not None:
+            actions = info_dialog.action
+            self.selected_source = info_dialog.selected_source
             if info_dialog.action == 'play_movie':
                 path = self.select_source_path(111)
                 self._play_video(path)
@@ -1318,33 +1330,41 @@ class GUI( xbmcgui.WindowXMLDialog ):
             listitem = self.getControl( 181 ).getSelectedItem()
             path = self.select_source_path(controlId)
             self._play_audio(path, listitem)
-        if controlId == 211:
+        elif controlId == 211:
             path = self.select_source_path(controlId)
             self._play_video(path)
         elif controlId == 198:
             self._newSearch()
+
 
     def select_source_path(self, controlId):
         source = self.select_source(controlId)
         return source.get('path')
 
     def select_source(self, controlId):
-        """ Controlls the source priority.
+        """ Controlls the source selcted for playback.
         """
         listitem = self.getControl( controlId ).getSelectedItem()
         source_data = listitem.getProperty('source_data')
         source_data = simplejson.loads(source_data)
-        for sid in self.source_order:
-            print '1 SEARCH GUI ->  looking for sid in sources= %s' % sid
-            source = source_data.get(sid)
-            print '1 SEARCH GUI ->  source_data = %s' % source
-            if source:
-                source['searchstring'] = listitem.getLabel().replace('(','[(]').replace(')','[)]').replace('+','[+]')
-                self.selected_source = source
-                print '1 SEARCH GUI -> found "%s" in source data' % sid
-                source_path = source.get('path')
-                return source
-        print '1 SEARCH GUI -> could not locate source data'
+        source = None
+
+        # use first source in order if non has been specified
+        if self.selected_source is None:
+            self.selected_source = self.source_order[0]
+        
+        # convert selected_source numeric key to valid source key
+        if isinstance( int(self.selected_source), int ):
+            source_keys = source_data.keys()
+            self.selected_source = source_keys[self.selected_source]
+            
+        source = source_data.get(self.selected_source, None)
+        if source is None:
+            raise KeyError('The selected source (%s) is not valid.' % self.selected_source)
+        
+        print '1 SEARCH GUI ->  source selected: %s' % self.selected_source
+        source['searchstring'] = listitem.getLabel().replace('(','[(]').replace(')','[)]').replace('+','[+]')
+        return source
 
     # TODO; need to
     def select_source_manual(self):

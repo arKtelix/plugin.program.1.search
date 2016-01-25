@@ -49,7 +49,7 @@ class One(object):
         :param search_str: The string to search for.
         :param media_type: media type to search.
         :param plugin: Limit search to specified plugin id
-        :param pid: The parent id if required to build a path
+        :param pid: The parent id if required item to build a path
         :return: List of results
         """
         self.results = list()
